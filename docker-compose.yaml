@@ -1,0 +1,39 @@
+version: '3.8'
+
+networks:
+  osky-net:
+    driver: bridge
+
+volumes:
+  redis:
+
+services:
+  osky-tracker:
+    depends_on:
+      - redis
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: opensky-tracker
+    networks:
+      - osky-net
+    ports:
+      - "8081:8081"
+    environment:
+      - REDISHOST=${REDISHOST:-db}
+      - REDISPORT=${REDISPORT:-6379}
+    deploy:
+      restart_policy: 
+        condition: on-failure
+        delay: 3s
+  redis:
+    image: redis:7.0.5
+    container_name: redis
+    hostname: db
+    networks:
+      - osky-net
+    ports: 
+      - 6379:6379
+    volumes:
+      - redis:/redis/redis-data
+    command: redis-server

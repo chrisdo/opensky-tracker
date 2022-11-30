@@ -8,8 +8,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -28,8 +30,16 @@ const (
 )
 
 func main() {
-
-	redisClient = redis.NewClient(&redis.Options{Addr: "localhost:6379", Password: "", DB: 0})
+	//of course redis connection config should come from outside
+	host, set := os.LookupEnv("REDISHOST")
+	if !set {
+		host = "localhost"
+	}
+	port, set := os.LookupEnv("REDISPORT")
+	if !set {
+		port = "6379"
+	}
+	redisClient = redis.NewClient(&redis.Options{Addr: fmt.Sprintf("%s:%s", host, port), Password: "", DB: 0})
 	defer redisClient.Close()
 
 	_, err := redisClient.Ping(redisClient.Context()).Result()
@@ -38,7 +48,7 @@ func main() {
 	}
 	log.Println("Succesfully connected to REDIS ")
 
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(15 * time.Minute)
 	defer ticker.Stop()
 
 	client = opensky.NewClient()
@@ -50,7 +60,7 @@ func main() {
 	go func() {
 		for {
 			fetchAndUpdateStateVectors()
-			cleanup() //just for simplicity now. ideally we want to separte the cleanup timer from fetching data. when we do this, we could do the cleanup in the same pipe afterwards..
+			cleanup() //just for simplicity now. ideally we want to separte the cleanup timer from fetching data.
 			<-ticker.C
 		}
 	}()
@@ -59,7 +69,7 @@ func main() {
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 	http.HandleFunc("/flights", flights)
-	http.ListenAndServe("127.0.0.1:8081", nil)
+	http.ListenAndServe(":8081", nil)
 
 }
 
