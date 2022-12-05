@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "github.com/chrisdo/opensky-tracker/notificator";
+
+package notificator;
+
+service Notificator {
+    rpc GetRegionUpdates(Region) returns (stream FlightStatus) {}
+}
+
+message Location {
+    double latitude = 1;
+    double longitude = 2;
+}
+
+message Region {
+    Location center = 1;
+    int32 radius = 3;
+}
+
+message FlightStatus {
+    string callsign = 1;
+    string modesId = 2;
+    Location position =3;
+    int32 altitude = 4;
+    int32 heading = 5;
+    string squawk = 6; 
+}

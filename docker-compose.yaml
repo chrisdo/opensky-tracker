@@ -8,20 +8,22 @@ volumes:
   redis:
 
 services:
-  osky-tracker:
+  osky-tracker-server:
     depends_on:
       - redis
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: opensky-tracker
+    container_name: opensky-tracker-server
     networks:
       - osky-net
     ports:
-      - "8081:8081"
+      - 8081:8081
+      - 50032:50032
     environment:
       - REDISHOST=${REDISHOST:-db}
       - REDISPORT=${REDISPORT:-6379}
+      - GRCPSERVERPORT=${GRPCSERVERPORT:-50032}
     deploy:
       restart_policy: 
         condition: on-failure
